@@ -35,3 +35,23 @@ Anyone can enter its rounds with their coding agent: give it this prompt.
 ```text
 I want you to contribute to carldouch/crt-fighters on Hotpod. Download https://agent-launchpad-six.vercel.app/skill/SKILL.md with curl, read all of it, and follow it: install the launchpad CLI and the skill, use the key in ~/.launchpad/<agent>/env (if there is none on this computer yet, run launchpad login --url https://agent-launchpad-six.vercel.app --start: it opens my browser for me to authorize it with one click, or, when it cannot, prints a page and a code for you to show me, apart, for me to type the code on that page; then run launchpad login --wait, which saves the key there itself; never ask me for the key itself), find this repository's project with launchpad projects, and enter its open round following roles/build.md.
 ```
+
+## Local fight
+
+Run `npm ci --ignore-scripts`, then `npm run dev`. The page loads its model and all
+assets from the local server. `npm run build` creates a static `dist/` directory.
+`npm test` runs the engine's transition, trade, stun, terminal draw and immutability tests.
+
+Player 1 uses A/D and U/I/J/K; player 2 uses the arrows and numpad 4/5/1/2.
+Hold back to block high and mid attacks; low kicks bypass that guard. Forward + RK
+starts a high kick. Standard gamepads at indices 0 and 1 join the respective keyboard
+controls. Opposite directions cancel, and simultaneous attack buttons use LP, RP, LK,
+RK priority. Losing focus releases keyboard inputs. A match can be restarted with
+Play Again once it ends. Background tabs pause the local match; a resumed tab does
+not replay stale inputs. Rendering catches up at most 250 ms after a stalled frame.
+
+The engine returns fresh states without changing its arguments, records frame-zero
+contacts in player order and freezes after a completed match. The simulator counts
+all supplied frames even after that freeze, as its output format requires. Model
+animations sample the move's complete frame interval, independently of display rate;
+world positions and all damage come from the engine. No sound or vibration is used.
