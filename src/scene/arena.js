@@ -1,7 +1,8 @@
 import * as THREE from 'three/webgpu';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { clone } from 'three/addons/utils/SkeletonUtils.js';
-import { MOVES, ANIMS, FPS, ROUND_PAUSE_FRAMES } from '../engine/rules.mjs';
+import { MOVES, ANIMS, FPS } from '../engine/rules.mjs';
+import { moveClipTime } from './animation-time.js';
 
 const COLORS = [0xff8b46, 0x66e6ef];
 const material = (color, extra = {}) => new THREE.MeshStandardMaterial({ color, roughness: 0.72, ...extra });
@@ -76,7 +77,7 @@ export async function createArena(renderer) {
     marker.rotation.x = -Math.PI / 2;
     marker.position.y = 0.025;
     scene.add(marker);
-    return { root, mixer, actions, marker, current: null, animationId: null, endElapsed: 0, wasEnded: false };
+    return { root, mixer, actions, marker, animationId: null, endElapsed: 0 };
   });
   const spark = new THREE.Mesh(new THREE.RingGeometry(0.05, 0.11, 12), new THREE.MeshBasicMaterial({ color: 0xffefb7, transparent: true, opacity: 0, side: THREE.DoubleSide, depthTest: false }));
   scene.add(spark);
@@ -106,14 +107,15 @@ export async function createArena(renderer) {
       } else if (f.stun && f.reaction && !f.reaction.blocked) {
         name = f.reaction.height === 'high' ? ANIMS.hitHigh : ANIMS.hitMid;
         animationId = `hit:${f.reaction.frame}`;
-        time = (state.frame - f.reaction.frame - 1) / FPS;
+        const duration = visual.actions.get(name)?.getClip().duration ?? 1;
+        time = duration * (state.frame - f.reaction.frame - 1) / f.reaction.duration;
         loop = false;
       } else if (f.move) {
         const rule = MOVES[f.move.key];
         name = rule.anim;
         animationId = `move:${f.move.key}:${state.frame - f.move.frame}`;
         const duration = visual.actions.get(name)?.getClip().duration ?? 1;
-        time = duration * f.move.frame / (rule.startup + rule.active + rule.recovery);
+        time = moveClipTime(rule, f.move.frame, duration);
         loop = false;
       } else if (f.walking) {
         name = ANIMS[f.walking];
@@ -125,7 +127,6 @@ export async function createArena(renderer) {
           visual.mixer.stopAllAction();
           action.reset().play();
           action.paused = true;
-          visual.current = action;
           visual.animationId = animationId;
         }
         const duration = action.getClip().duration;

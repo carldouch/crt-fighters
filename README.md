@@ -53,5 +53,6 @@ not replay stale inputs. Rendering catches up at most 250 ms after a stalled fra
 The engine returns fresh states without changing its arguments, records frame-zero
 contacts in player order and freezes after a completed match. The simulator counts
 all supplied frames even after that freeze, as its output format requires. Model
-animations sample the move's complete frame interval, independently of display rate;
+animations sample the move's frame interval, with the limb's maximum reach aligned
+to its first active frame and its return aligned to recovery, independently of display rate;
 world positions and all damage come from the engine. No sound or vibration is used.

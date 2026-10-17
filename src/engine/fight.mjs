@@ -85,7 +85,7 @@ export function step(previous, inputs = {}) {
   for (const { attacker, target, key, move, blocked } of contacts) {
     const f = state[target];
     f.stun = blocked ? move.blockstun : move.hitstun;
-    f.reaction = { frame: previous.frame, height: move.height, blocked };
+    f.reaction = { frame: previous.frame, height: move.height, blocked, duration: f.stun };
     if (!blocked) {
       f.hp = Math.max(0, f.hp - move.damage);
       f.move = null;
