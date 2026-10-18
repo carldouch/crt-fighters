@@ -82,8 +82,10 @@ Where the specification leaves a choice, this is what the entry does:
   still starts its move as soon as the fighter is free. A held button keeps acting, as the rules say.
 - The frame counter keeps counting after the match ends; nothing else changes.
 - The simulator refuses a button listed twice and warns, on stderr, about keys it does not know.
-- The engine catches up after a slow frame (up to half a second of play), and skips a longer gap, such as
-  a tab left in the background, rather than playing it all at once.
+- The engine keeps its own clock, apart from the drawing (`src/main.js`): a timer steps it as soon as a
+  frame is due, so a slow picture (a weak GPU, software rendering) neither slows the fight nor delays an
+  input. A hidden page pauses it, and a stall longer than half a second is skipped rather than played at
+  once.
 
 ## How it is built
 

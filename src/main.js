@@ -20,6 +20,7 @@ import { COLORS, createStage } from "./scene/stage.mjs";
 window.__crt = { ready: false, renderer: null, fight: null };
 const status = document.getElementById("status");
 const other = { p1: "p2", p2: "p1" };
+const CLOCK_MS = 4; // how often the engine's clock checks for a frame due
 
 try {
   const renderer = new THREE.WebGPURenderer({ antialias: true, forceWebGL: new URLSearchParams(location.search).has("webgl2") });
@@ -54,15 +55,26 @@ try {
   const hudRoot = document.getElementById("hud");
   const hud = new Hud(hudRoot);
 
+  // A window of no size (a collapsed pane) has nothing to draw: the fight goes on, undrawn.
+  const drawable = () => window.innerWidth > 0 && window.innerHeight > 0;
   window.addEventListener("resize", () => {
+    if (!drawable()) return;
     view.resize(window.innerWidth / window.innerHeight);
     renderer.setSize(window.innerWidth, window.innerHeight);
   });
 
+  // The engine keeps its own time, apart from the drawing: a timer steps it as soon as a frame is due, so
+  // a slow picture (a weak GPU, software rendering) neither slows the fight nor delays an input. A hidden
+  // page pauses it.
+  setInterval(() => document.hidden || game.update(performance.now()), CLOCK_MS);
+  document.addEventListener("visibilitychange", () => game.pause());
+
   let last = null;
   let round = 0;
   let seen = game.state; // the state of the last frame drawn
-  renderer.setAnimationLoop((now) => {
+  renderer.setAnimationLoop(() => {
+    if (!drawable()) return;
+    const now = performance.now();
     const dt = last === null ? 0 : Math.min(0.1, (now - last) / 1000);
     last = now;
     const alpha = game.update(now);

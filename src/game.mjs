@@ -1,5 +1,6 @@
 // The page's match: the engine stepped at a fixed 60 steps per second, whatever the display's refresh rate,
-// fed by the controls, and published in window.__crt after every step. No rendering here.
+// fed by the controls, and published in window.__crt after every step. No rendering here: the page calls
+// update() from its own clock as well as before drawing, and each call steps the frames that are due.
 import { createFight, step } from "./engine/fight.mjs";
 import { FPS } from "./engine/rules.mjs";
 
@@ -38,7 +39,7 @@ export class Game {
    * frame left over, from 0 to 1, for the renderer to interpolate with.
    */
   update(now) {
-    this.lag += Math.min(this.last === null ? 0 : now - this.last, MAX_CATCH_UP_MS);
+    this.lag += this.last === null ? 0 : Math.min(Math.max(0, now - this.last), MAX_CATCH_UP_MS);
     this.last = now;
     const start = this.controls.takeStart();
     if (start && this.rematchReady) {
@@ -55,6 +56,11 @@ export class Game {
       this.onStep(this.state);
     }
     return this.lag / STEP_MS;
+  }
+
+  /** Stops the clock until the next update(), which resumes from then: for a page that is hidden. */
+  pause() {
+    this.last = null;
   }
 
   /** Whether Enter or Start now starts a rematch. */
