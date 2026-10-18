@@ -35,7 +35,7 @@ export class Effects {
     group.position.copy(point);
     group.renderOrder = 10;
     this.scene.add(group);
-    this.sparks.push({ group, parts, age: 0, size: blocked ? 0.8 : 0.7 + damage / 12 });
+    this.sparks.push({ group, parts, age: 0, size: blocked ? 0.65 : 0.55 + damage / 16 });
     this.trauma = Math.min(1, this.trauma + (blocked ? 0.15 : 0.25 + damage / 30));
   }
 

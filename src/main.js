@@ -12,6 +12,7 @@ import { Effects } from "./scene/effects.mjs";
 import { Fighter } from "./scene/fighter.mjs";
 import { Hud } from "./scene/hud.mjs";
 import { loadModel } from "./scene/model.mjs";
+import { createRender } from "./scene/post.mjs";
 import { COLORS, createStage } from "./scene/stage.mjs";
 
 // The page's state, read by the checks: see ARCHITECTURE.md, "The page".
@@ -39,6 +40,7 @@ try {
   };
   scene.add(fighters.p1.group, fighters.p2.group);
   const effects = new Effects(scene, view.camera);
+  const render = createRender(renderer, scene, view.camera);
 
   let presses = 0;
   const stamp = () => ++presses; // orders presses across the keyboard and the gamepads
@@ -73,9 +75,9 @@ try {
     effects.update(dt);
     const newRound = state.round !== round;
     round = state.round;
-    view.frame(fighters.p1.group.position.x, fighters.p2.group.position.x, model.height, dt, effects.shake(), newRound);
+    view.frame(fighters.p1.center(), fighters.p2.center(), model.height, dt, effects.shake(), newRound);
     hud.update(state, { renderer: window.__crt.renderer, pads: pads.connected, rematchReady: game.rematchReady }, dt);
-    renderer.render(scene, view.camera);
+    render();
   });
 
   status.remove();

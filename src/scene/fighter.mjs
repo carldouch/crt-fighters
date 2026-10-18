@@ -4,7 +4,7 @@
 import * as THREE from "three/webgpu";
 import { clone as cloneRig } from "three/addons/utils/SkeletonUtils.js";
 import { roundOver } from "../engine/fight.mjs";
-import { ANIMS, FPS, MOVES } from "../engine/rules.mjs";
+import { ANIMS, FPS, MOVES, WALK_BACK, WALK_FORWARD } from "../engine/rules.mjs";
 import { Animator } from "./animator.mjs";
 import { bone, UNIT } from "./model.mjs";
 import { hurtTime, moveKnots, timeAt } from "./timing.mjs";
@@ -12,8 +12,10 @@ import { hurtTime, moveKnots, timeAt } from "./timing.mjs";
 // The knockout fall plays faster, to land within the pause after the round.
 const KO_SPEED = 2.6;
 const VICTORY_SPEED = 1.2;
-// Walk clips are steps in place; played faster, they keep up with the engine's walking speeds.
-const WALK_RATE = { forward: 2.2, back: 2 };
+// Walk clips are steps in place, played at the pace of the engine's walking speeds (see model.mjs), so that
+// the feet do not slide; at most this much faster than the clip, beyond which the steps would blur.
+const MAX_WALK_RATE = 5;
+const WALK_SPEED = { forward: WALK_FORWARD * FPS * UNIT, back: WALK_BACK * FPS * UNIT }; // metres per second
 // Crossfade times (seconds): short into a strike or a reaction, longer back to the stance.
 const FADE = { move: 0.05, hurt: 0.04, guard: 0.05, walk: 0.12, idle: 0.15, end: 0.12 };
 
@@ -30,6 +32,8 @@ export class Fighter {
     this.animator = new Animator(this.root, model.clips);
     this.knots = Object.fromEntries(Object.keys(MOVES).map((k) => [k, moveKnots(k, model.strikes[k].time, model.clips[MOVES[k].anim].duration)]));
     this.limbs = Object.fromEntries(Object.entries(model.strikes).map(([k, s]) => [k, bone(this.root, s.limb)]));
+    this.hips = bone(this.root, "Hips");
+    this.walkRate = Object.fromEntries(["forward", "back"].map((w) => [w, Math.min(MAX_WALK_RATE, WALK_SPEED[w] / model.paces[ANIMS[w]])]));
     this.screens = this.#paint(look);
     this.flash = 0;
   }
@@ -87,9 +91,14 @@ export class Fighter {
       return { id, clip: name, time: hurtTime(elapsed + alpha, clip(name).duration), fade: FADE.hurt };
     } else if (f.walk) {
       const [from, to] = this.model.loops[ANIMS[f.walk]];
-      return { id: `walk:${f.walk}`, clip: ANIMS[f.walk], loop: { from, to, rate: WALK_RATE[f.walk], restart: true }, fade: FADE.walk };
+      return { id: `walk:${f.walk}`, clip: ANIMS[f.walk], loop: { from, to, rate: this.walkRate[f.walk], restart: true }, fade: FADE.walk };
     }
     return { id: "idle", clip: ANIMS.idle, loop: { from: 0, to: clip(ANIMS.idle).duration }, fade: FADE.idle };
+  }
+
+  /** Where the body is on screen (x, metres): the camera frames the bodies, a knocked-out one included. */
+  center() {
+    return this.hips.getWorldPosition(new THREE.Vector3()).x;
   }
 
   /** The world position of the hand or foot that strikes with `move`, as posed now. */

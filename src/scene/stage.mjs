@@ -47,8 +47,8 @@ const screen = () => canvasTexture(1024, 384, (g, w, h) => {
   for (let y = 0; y < h; y += 4) g.fillRect(0, y, w, 2);
 });
 
-// A glowing strip: unlit, so it reads as light whatever the lights do.
-const neon = (color, w, h, d) => new THREE.Mesh(new THREE.BoxGeometry(w, h, d), new THREE.MeshBasicMaterial({ color }));
+// A glowing strip: unlit, and brighter than any lit surface, so that it reads as light (and blooms).
+const neon = (color, w, h, d) => new THREE.Mesh(new THREE.BoxGeometry(w, h, d), new THREE.MeshBasicMaterial({ color: new THREE.Color(color).multiplyScalar(2.5) }));
 
 export function createStage(scene) {
   scene.background = new THREE.Color(0x06050c);

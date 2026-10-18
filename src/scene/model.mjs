@@ -94,21 +94,31 @@ function measure(root, clips) {
     travel[move.anim] = s.travel > 1e-6 ? THREE.MathUtils.clamp(missing / s.travel, 0, 1) : 0;
   }
 
-  // The walk clips are one step each, from the stance back to it: loop the part where the feet move.
+  // The walk clips are one step each, from the stance back to it: loop the part where the feet move. Their
+  // pace is how fast the foot on the ground sweeps back under the body (model units per second): the
+  // speed at which the clip walks without sliding.
   const loops = {};
+  const pace = {};
   for (const name of [ANIMS.forward, ANIMS.back]) {
     const clip = clips[name];
     const feet = () => [p.at("LeftFoot"), p.at("RightFoot")].map((f) => f.sub(p.at("Hips")));
     p.pose(clip, 0);
     const still = feet();
     const moving = [];
+    let sweep = 0;
+    let previous = null;
     for (let i = 0; i <= SAMPLES; i++) {
       const time = (clip.duration * i) / SAMPLES;
       p.pose(clip, time);
-      if (feet().some((f, j) => f.distanceTo(still[j]) > height * 0.01)) moving.push(time);
+      const now = feet();
+      if (now.some((f, j) => f.distanceTo(still[j]) > height * 0.01)) moving.push(time);
+      const planted = now[0].y < now[1].y ? 0 : 1;
+      if (previous?.planted === planted) sweep += Math.abs(now[planted].z - previous.feet[planted].z);
+      previous = { feet: now, planted };
     }
     const step = clip.duration / SAMPLES;
     loops[name] = moving.length ? [Math.max(0, moving[0] - step), Math.min(clip.duration, moving.at(-1) + step)] : [0, clip.duration];
+    pace[name] = sweep / (loops[name][1] - loops[name][0]);
   }
 
   // There is no blocking clip: a block holds the backward step's lowest crouch, its guard up.
@@ -123,7 +133,8 @@ function measure(root, clips) {
   p.dispose();
   for (const [o, pos, quat, scl] of rest) o.position.copy(pos), o.quaternion.copy(quat), o.scale.copy(scl);
   root.updateMatrixWorld(true);
-  return { scale, height: height * scale, halfDepth: halfDepth * scale, strikes, travel, loops, guardTime: guard.time, restHips };
+  const paces = Object.fromEntries(Object.entries(pace).map(([name, v]) => [name, v * scale]));
+  return { scale, height: height * scale, halfDepth: halfDepth * scale, strikes, travel, loops, paces, guardTime: guard.time, restHips };
 }
 
 // Copies of the clips where the hips stay over the fighter's position: the engine moves the fighter, the
