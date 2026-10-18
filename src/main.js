@@ -1,5 +1,5 @@
 import './style.css';
-import { createFight, step } from './engine/fight.mjs';
+import { createMatch, advanceMatch, restartMatch } from './engine/match.mjs';
 import { FPS } from './engine/rules.mjs';
 import { createControls } from './input/controls.mjs';
 import { createArena } from './scene/arena.js';
@@ -10,14 +10,15 @@ import { resultAnnouncement } from './ui/announcement.mjs';
 const hud = createHud();
 const controls = createControls();
 const audio = createAudio();
-let state = createFight();
+let match = createMatch();
+let state = match.fight;
 let previous = state;
 let paused = false;
 let accumulator = 0;
 let last = null;
 let startAt = 0;
 const tick = 1 / FPS;
-window.__crt = { ready: false, renderer: null, fight: state };
+window.__crt = { ready: false, renderer: null, fight: state, settings: match.settings };
 const dialog = document.getElementById('controls-dialog');
 function pause(value) {
   paused = value; accumulator = 0; last = null; controls.setActive(!value); previous = state;
@@ -29,10 +30,18 @@ document.getElementById('close-help').addEventListener('click', closeHelp);
 document.getElementById('resume').addEventListener('click', closeHelp);
 dialog.addEventListener('cancel', (event) => { event.preventDefault(); closeHelp(); });
 document.addEventListener('visibilitychange', () => { controls.clear(); accumulator = 0; last = null; previous = state; });
-function rematch() {
-  if (state.phase !== 'over') return;
-  state = createFight(); previous = state; accumulator = 0; last = null; startAt = performance.now(); controls.clear(); window.__crt.fight = state;
+function restart(changes = {}) {
+  match = restartMatch(match, changes); state = match.fight; previous = state; accumulator = 0; last = null; startAt = performance.now(); controls.clear();
+  window.__crt.fight = state; window.__crt.settings = match.settings;
+  document.getElementById('difficulty').disabled = match.settings.mode === 'local';
+  document.getElementById('mode-label').textContent = match.settings.mode === 'local' ? 'LOCAL PVP' : `VS CPU · ${match.settings.difficulty.toUpperCase()}`;
 }
+function rematch() {
+  if (state.phase === 'over') restart();
+}
+document.getElementById('game-mode').addEventListener('change', (event) => { restart({ mode: event.target.value }); event.target.blur(); });
+document.getElementById('difficulty').addEventListener('change', (event) => { restart({ difficulty: event.target.value }); event.target.blur(); });
+document.getElementById('restart-match').addEventListener('click', () => restart());
 document.getElementById('rematch').addEventListener('click', rematch);
 window.addEventListener('keydown', (event) => {
   if (event.repeat) return;
@@ -58,7 +67,7 @@ try {
       accumulator += elapsed;
       while (accumulator >= tick) {
         previous = state;
-        state = step(state, controls.sample());
+        match = advanceMatch(match, controls.sample()); state = match.fight;
         for (let i = previous.events.length; i < state.events.length; i++) {
           const event = state.events[i]; arena.impact(event, state); hud.hit(event, now); audio.hit(event);
         }
@@ -74,7 +83,7 @@ try {
     } else if (state.roundFrame < 50 && now - startAt < 1400) hud.announce('FIGHT', 'ROUND 01 · SIGNAL LIVE');
     else if (state.roundFrame < 40 && state.rounds.length) hud.announce('FIGHT', `ROUND ${state.rounds.length + 1} · SIGNAL LIVE`);
     else hud.announce('');
-    hud.update(state, controls.connected(), now);
+    hud.update(state, controls.connected(), now, match.settings);
     arena.render(state, previous, state.phase === 'fight' ? accumulator / tick : 1, paused || document.hidden ? 0 : elapsed);
   });
 } catch (error) {

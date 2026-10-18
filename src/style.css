@@ -553,3 +553,30 @@ dialog p {
     transition: none!important;
   }
 }
+
+/* Match options stay reachable without interrupting the default local match. */
+.match-setup {
+  position: absolute; z-index: 5; top: 80px; left: 50%; transform: translateX(-50%);
+  display: flex; align-items: center; gap: 14px; white-space: nowrap;
+  color: #91a4ad; font-size: 9px; letter-spacing: 1px;
+}
+.match-setup label { display: flex; align-items: center; gap: 7px; }
+.match-setup select { color: #e6ecea; background: #111e29; border: 1px solid #3c505c; padding: 7px; font: inherit; cursor: pointer; }
+.match-setup select:disabled { opacity: .45; cursor: default; }
+.match-setup button { padding: 7px; font-size: 9px; }
+.match-setup :focus-visible { outline: 2px solid #f5a541; outline-offset: 3px; }
+.hud { top: 132px; }
+.guard-badge { color: #7c909c; font-size: 8px; letter-spacing: 1px; padding: 3px 5px; border: 1px solid transparent; }
+.guard-badge.active { color: #d2fcff; background: #12434b; border-color: #66ddeb; box-shadow: 0 0 15px #49d9ec55; }
+@media(max-width:1100px) { .center-note { display: none; } }
+@media(max-width:700px) {
+  .match-setup { top: 65px; gap: 8px; font-size: 8px; }
+  .match-setup label { gap: 4px; }
+  .match-setup select { padding: 6px 3px; }
+  .hud { top: 112px; }
+  .guard-badge { font-size: 6px; letter-spacing: 0; padding: 3px 1px; }
+  .player-bottom { flex-wrap: wrap; gap: 4px; }
+  .quick-controls .player-tag { grid-row: 1/5; }
+  footer { height: 112px; }
+  .control-table { font-size: 8px; }
+}

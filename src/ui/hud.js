@@ -18,7 +18,7 @@ export function createHud() {
       p.hit.textContent = event.blocked ? 'GUARD' : `${event.move === 'lk' ? 'LOW' : 'HIT'} −${event.damage}`;
       p.until = now + 450;
     },
-    update(state, connected, now) {
+    update(state, connected, now, settings = {}) {
       const round = state.rounds.length + (state.phase === 'fight' ? 1 : 0);
       $('round').textContent = `ROUND ${String(round).padStart(2, '0')}`;
       $('timer').textContent = String(Math.max(0, Math.ceil((ROUND_FRAMES - state.roundFrame) / FPS))).padStart(2, '0');
@@ -29,7 +29,10 @@ export function createHud() {
         p.bar.setAttribute('aria-valuenow', f.hp);
         for (const bar of p.bar.children) bar.style.transform = `scaleX(${f.hp / 100})`;
         [...p.wins].forEach((w, n) => w.classList.toggle('won', state.roundWins[id] > n));
-        p.device.textContent = connected[i] ? `GAMEPAD ${i + 1}` : 'KEYBOARD';
+        p.device.textContent = i === 1 && settings.mode === 'cpu' ? `CPU · ${settings.difficulty.toUpperCase()}` : connected[i] ? `GAMEPAD ${i + 1}` : 'KEYBOARD';
+        const guarding = f.hp > 0 && (f.blocking || (f.stun > 0 && f.reaction?.blocked));
+        $(`guard${i + 1}`).classList.toggle('active', !!guarding);
+        $(`guard${i + 1}`).textContent = guarding ? '◈ BLOCKING' : '◇ GUARD';
         p.move.textContent = f.hp === 0 ? 'SIGNAL LOST' : f.move ? MOVES[f.move.key].name.toUpperCase() : f.stun ? f.reaction?.blocked ? 'GUARD' : 'HIT' : f.blocking ? 'GUARD' : f.motion === 'forward' ? 'ADVANCING' : 'READY';
         p.hit.classList.toggle('visible', now < p.until);
       });
