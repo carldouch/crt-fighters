@@ -59,7 +59,8 @@ its time come from the engine's frame counters (`src/scene/fighter.mjs`, `src/sc
 - **Walks keep the feet planted.** The step clips play at the speed at which the foot on the ground keeps
   up with the engine's walking speed (at most 5 times the clip's).
 - **Hits and blocks are easy to read:** a spark where the strike lands (warm for a hit, cyan for a block),
-  a short camera shake, the hit fighter's screens flashing, its hp bar shaking. A hit plays the head or
+  a short camera shake, the hit fighter's screens flashing, its hp bar shaking, a sound (synthesised with
+  Web Audio: nothing is loaded; `M` mutes it) and its gamepad rumbling. A hit plays the head or
   body reaction over the hitstun; a block holds a crouched guard over the blockstun. A knockout falls
   within the 90-frame pause, the winner celebrates, and the screen fades between rounds.
 

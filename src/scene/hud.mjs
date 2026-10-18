@@ -5,6 +5,9 @@ import { FPS, MAX_HP, ROUND_FRAMES, ROUNDS_TO_WIN } from "../engine/rules.mjs";
 
 const NAMES = { p1: "PLAYER 1", p2: "PLAYER 2" };
 const FADE_FRAMES = 15;
+/** The frame of a round where the HUD calls "FIGHT!", after "ROUND n"; the banner ends at BANNER_END. */
+export const FIGHT_FRAME = 36;
+const BANNER_END = 60;
 
 /** The banner for a state, [title, subtitle], or null. */
 export function bannerOf(s, rematchReady = false) {
@@ -15,8 +18,8 @@ export function bannerOf(s, rematchReady = false) {
     return [title, winner ? `${NAMES[winner]} takes round ${s.round}` : `Round ${s.round}: no winner`];
   }
   const final = s.roundWins.p1 === ROUNDS_TO_WIN - 1 && s.roundWins.p2 === ROUNDS_TO_WIN - 1;
-  if (s.roundFrames < 36) return [final ? "FINAL ROUND" : `ROUND ${s.round}`, ""];
-  if (s.roundFrames < 60) return ["FIGHT!", ""];
+  if (s.roundFrames < FIGHT_FRAME) return [final ? "FINAL ROUND" : `ROUND ${s.round}`, ""];
+  if (s.roundFrames < BANNER_END) return ["FIGHT!", ""];
   return null;
 }
 
@@ -60,7 +63,7 @@ export class Hud {
     el.classList.add("hit");
   }
 
-  /** `info`: { renderer, pads: [p1 connected, p2 connected], rematchReady }. */
+  /** `info`: { renderer, pads: [p1 connected, p2 connected], rematchReady, sound: on or off }. */
   update(s, info, dt) {
     for (const p of ["p1", "p2"]) {
       const side = this.sides[p];
@@ -83,6 +86,6 @@ export class Hud {
     }
     this.fade.style.opacity = String(fadeOf(s));
     if (dt > 0) this.fps += (1 / dt - this.fps) * Math.min(1, dt * 2);
-    this.#set(this.badge, `${info.renderer === "webgpu" ? "WebGPU" : "WebGL 2"} · ${Math.round(this.fps)} fps`);
+    this.#set(this.badge, `${info.renderer === "webgpu" ? "WebGPU" : "WebGL 2"} · ${Math.round(this.fps)} fps · sound ${info.sound ? "on" : "off"} (M)`);
   }
 }

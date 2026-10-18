@@ -10,9 +10,10 @@ import { Keyboard } from "./input/keyboard.mjs";
 import { FightCamera } from "./scene/camera.mjs";
 import { Effects } from "./scene/effects.mjs";
 import { Fighter } from "./scene/fighter.mjs";
-import { Hud } from "./scene/hud.mjs";
+import { FIGHT_FRAME, Hud } from "./scene/hud.mjs";
 import { loadModel } from "./scene/model.mjs";
 import { createRender } from "./scene/post.mjs";
+import { Sound } from "./scene/sound.mjs";
 import { COLORS, createStage } from "./scene/stage.mjs";
 
 // The page's state, read by the checks: see ARCHITECTURE.md, "The page".
@@ -49,6 +50,7 @@ try {
   const game = new Game(controls, (state) => {
     window.__crt.fight = publicView(state);
   });
+  const sound = new Sound(window);
   const hudRoot = document.getElementById("hud");
   const hud = new Hud(hudRoot);
 
@@ -59,6 +61,7 @@ try {
 
   let last = null;
   let round = 0;
+  let seen = game.state; // the state of the last frame drawn
   renderer.setAnimationLoop((now) => {
     const dt = last === null ? 0 : Math.min(0.1, (now - last) / 1000);
     last = now;
@@ -66,17 +69,23 @@ try {
     const { state, previous } = game;
     for (const f of Object.values(fighters)) f.update(state, previous, alpha, dt);
     for (const e of game.takeEvents()) {
+      const hurt = other[e.attacker];
       effects.spark(fighters[e.attacker].strikePoint(e.move), e.blocked, e.damage);
+      sound.hit(e.damage, e.blocked);
+      pads.rumble(hurt, e.blocked ? 0.25 : 0.4 + e.damage / 20, e.blocked ? 60 : 120 + e.damage * 6);
       if (!e.blocked) {
-        fighters[other[e.attacker]].hurt(0.4 + e.damage / 12);
-        hud.hit(other[e.attacker]);
+        fighters[hurt].hurt(0.4 + e.damage / 12);
+        hud.hit(hurt);
       }
     }
+    if (state.rounds.length > seen.rounds.length && state.rounds.at(-1).reason === "ko") sound.knockout();
+    if (state.round === seen.round && seen.roundFrames < FIGHT_FRAME && state.roundFrames >= FIGHT_FRAME) sound.fight();
+    seen = state;
     effects.update(dt);
     const newRound = state.round !== round;
     round = state.round;
     view.frame(fighters.p1.center(), fighters.p2.center(), model.height, dt, effects.shake(), newRound);
-    hud.update(state, { renderer: window.__crt.renderer, pads: pads.connected, rematchReady: game.rematchReady }, dt);
+    hud.update(state, { renderer: window.__crt.renderer, pads: pads.connected, rematchReady: game.rematchReady, sound: !sound.muted }, dt);
     render();
   });
 

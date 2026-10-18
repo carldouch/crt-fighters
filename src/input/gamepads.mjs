@@ -46,6 +46,12 @@ export class Gamepads {
     });
   }
 
+  /** Shakes `player`'s gamepad, if it can, with `strength` from 0 to 1 for `ms` milliseconds. */
+  rumble(player, strength, ms) {
+    const pad = typeof navigator !== "undefined" && navigator.getGamepads ? navigator.getGamepads()[PAD_PLAYERS.indexOf(player)] : null;
+    pad?.vibrationActuator?.playEffect?.("dual-rumble", { duration: ms, strongMagnitude: strength, weakMagnitude: strength / 2 })?.catch?.(() => {});
+  }
+
   takeStart() {
     const any = this.startPresses > 0;
     this.startPresses = 0;
