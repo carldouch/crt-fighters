@@ -3,15 +3,33 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>CRT Fighters</title>
-    <style>
-      html, body { margin: 0; height: 100%; background: #0b0b10; color: #e8e8f0; font-family: system-ui, sans-serif; overflow: hidden; }
-      canvas { display: block; width: 100vw; height: 100vh; }
-      #status { position: fixed; top: 12px; left: 50%; transform: translateX(-50%); }
-    </style>
+    <meta name="theme-color" content="#0b1119" />
+    <meta name="description" content="Two screens. One signal. A local two-player arcade fighting game." />
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'%3E%3Crect x='4' y='8' width='32' height='26' rx='5' fill='%23f5a541'/%3E%3Crect x='8' y='12' width='24' height='17' rx='3' fill='%230b1119'/%3E%3C/svg%3E" />
+    <title>CRT Fighters — Local Versus</title>
   </head>
   <body>
-    <div id="status"></div>
+    <main id="arena" aria-label="3D fighting arena"></main>
+    <div class="vignette" aria-hidden="true"></div>
+    <header class="masthead">
+      <a class="brand" href="./" aria-label="CRT Fighters home"><span class="brand-icon">▣</span> CRT<span class="brand-light">FIGHTERS</span><span class="edition">01</span></a>
+      <div class="match-type"><span class="live-dot"></span> LOCAL VERSUS <span class="divider">/</span> BEST OF THREE</div>
+      <div class="toolbar"><button id="sound" aria-pressed="false" title="Toggle synthesized sound">SOUND OFF</button><button id="help" aria-haspopup="dialog">CONTROLS <span>?</span></button></div>
+    </header>
+    <section class="hud" aria-label="Match scoreboard">
+      <div class="player p1"><div class="player-meta"><span>PLAYER 01</span><span id="device1">KEYBOARD</span></div><div class="player-name">AMBER <span id="hp1">100</span></div><div class="health" role="progressbar" aria-label="Player 1 health" aria-valuemin="0" aria-valuemax="100" aria-valuenow="100"><div class="health-trail"></div><div class="health-fill"></div></div><div class="player-bottom"><span class="wins" id="wins1" aria-label="Player 1 round wins"><i></i><i></i></span><span class="move-label" id="move1">READY</span></div></div>
+      <div class="clock"><span id="round">ROUND 01</span><strong id="timer">60</strong><small>FIRST TO TWO</small></div>
+      <div class="player p2"><div class="player-meta"><span>PLAYER 02</span><span id="device2">KEYBOARD</span></div><div class="player-name">CYAN <span id="hp2">100</span></div><div class="health" role="progressbar" aria-label="Player 2 health" aria-valuemin="0" aria-valuemax="100" aria-valuenow="100"><div class="health-trail"></div><div class="health-fill"></div></div><div class="player-bottom"><span class="wins" id="wins2" aria-label="Player 2 round wins"><i></i><i></i></span><span class="move-label" id="move2">READY</span></div></div>
+    </section>
+    <div class="stage-mark" aria-hidden="true"><span>TRANSMISSION ARENA</span><span>52° / SECTOR 01</span></div>
+    <div id="announcement" role="status" aria-live="polite"><span id="announcement-sub">TUNING IN</span><strong id="announcement-title">CONNECTING…</strong><button id="rematch" hidden>REMATCH <span>↵</span></button></div>
+    <div id="hit1" class="hit-label hit1" aria-hidden="true"></div><div id="hit2" class="hit-label hit2" aria-hidden="true"></div>
+    <footer>
+      <div class="quick-controls"><span class="player-tag">P1</span><span><kbd>A</kbd><kbd>D</kbd> MOVE / GUARD</span><span><kbd>U</kbd><kbd>I</kbd> PUNCH</span><span><kbd>J</kbd><kbd>K</kbd> KICK</span></div>
+      <div class="center-note">HOLD BACK TO GUARD <span>·</span> FORWARD + RK = HIGH KICK</div>
+      <div class="quick-controls"><span class="player-tag">P2</span><span><kbd>←</kbd><kbd>→</kbd> MOVE / GUARD</span><span><kbd>4</kbd><kbd>5</kbd> PUNCH</span><span><kbd>1</kbd><kbd>2</kbd> KICK <small>NUMPAD</small></span></div>
+    </footer>
+    <dialog id="controls-dialog" aria-labelledby="controls-title"><div class="dialog-top"><span class="eyebrow">HOW TO PLAY</span><button id="close-help" aria-label="Close controls">✕</button></div><h1 id="controls-title">Two screens.<br>One signal.</h1><p>Win two rounds to take the match. Get close, find an opening, and keep your guard up.</p><div class="control-table"><div><b>ACTION</b><b>PLAYER 1</b><b>PLAYER 2</b><b>GAMEPAD</b></div><div><span>Move / guard</span><span>A / D</span><span>← / →</span><span>Stick / D-pad</span></div><div><span>Left punch</span><span>U</span><span>Num 4</span><span>X / □</span></div><div><span>Right punch</span><span>I</span><span>Num 5</span><span>Y / △</span></div><div><span>Low kick</span><span>J</span><span>Num 1</span><span>A / ×</span></div><div><span>Middle kick</span><span>K</span><span>Num 2</span><span>B / ○</span></div></div><p class="tip">Hold away from your opponent to block high and middle attacks. Low kicks beat standing guard. Hold forward with right kick for a longer high kick.</p><p class="tip">Gamepad 1 controls Amber; gamepad 2 controls Cyan. Keyboard and gamepads work together. Escape pauses; Enter rematches after a match.</p><button id="resume" class="primary">BACK TO THE FIGHT <span>→</span></button></dialog>
     <script type="module" src="/src/main.js"></script>
   </body>
 </html>
