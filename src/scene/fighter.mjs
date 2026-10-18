@@ -18,6 +18,9 @@ const MAX_WALK_RATE = 5;
 const WALK_SPEED = { forward: WALK_FORWARD * FPS * UNIT, back: WALK_BACK * FPS * UNIT }; // metres per second
 // Crossfade times (seconds): short into a strike or a reaction, longer back to the stance.
 const FADE = { move: 0.05, hurt: 0.04, guard: 0.05, walk: 0.12, idle: 0.15, end: 0.12 };
+// The body's hitbox wraps the TV a little tighter than its mesh: kept this far (metres) above the floor.
+const FLOOR_MARGIN = 0.015;
+const v = new THREE.Vector3();
 
 export class Fighter {
   /** `look`: { screen: colour of the TV screens, hue: shift of the body's colours (0 keeps them) }. */
@@ -33,6 +36,7 @@ export class Fighter {
     this.knots = Object.fromEntries(Object.keys(MOVES).map((k) => [k, moveKnots(k, model.strikes[k].time, model.clips[MOVES[k].anim].duration)]));
     this.limbs = Object.fromEntries(Object.entries(model.strikes).map(([k, s]) => [k, bone(this.root, s.limb)]));
     this.hips = bone(this.root, "Hips");
+    this.body = this.root.getObjectByName("hitboxbody");
     this.walkRate = Object.fromEntries(["forward", "back"].map((w) => [w, Math.min(MAX_WALK_RATE, WALK_SPEED[w] / model.paces[ANIMS[w]])]));
     this.screens = this.#paint(look);
     this.flash = 0;
@@ -65,8 +69,19 @@ export class Fighter {
     this.group.position.x = THREE.MathUtils.lerp(p.x, f.x, alpha) * UNIT;
     this.animator.show(this.pose(state, alpha), dt);
     this.animator.update(dt);
+    this.#stayAboveFloor();
     this.flash = Math.max(0, this.flash - dt * 4);
     for (const m of this.screens) m.emissiveIntensity = 0.55 + this.flash * 3;
+  }
+
+  // Some clips were made for a slimmer body: lying knocked out, the TV would sink into the floor. The
+  // fighter is lifted until the TV's (hidden) hitbox, skinned like the rest of the body, rests on the floor.
+  #stayAboveFloor() {
+    this.root.position.y = 0;
+    this.group.updateMatrixWorld(true);
+    let lowest = Infinity;
+    for (let i = 0; i < this.body.geometry.attributes.position.count; i++) lowest = Math.min(lowest, this.body.getVertexPosition(i, v).applyMatrix4(this.body.matrixWorld).y);
+    this.root.position.y = Math.max(0, FLOOR_MARGIN - lowest);
   }
 
   /** The pose for `state`: which clip, and its time or its loop (see Animator.show). */
@@ -87,7 +102,7 @@ export class Fighter {
       const elapsed = f.hurt.frames - f.stun; // frames since the hit landed
       const id = `hurt:${shown - elapsed}`;
       if (f.hurt.blocked) return { id, clip: ANIMS.back, time: this.model.guardTime, fade: FADE.guard };
-      const name = MOVES[f.hurt.move].height === "high" ? ANIMS.hitHigh : ANIMS.hitMid;
+      const name = this.model.reactions[f.hurt.move]; // the head or body reaction, thrown away from the strike's side
       return { id, clip: name, time: hurtTime(elapsed + alpha, clip(name).duration), fade: FADE.hurt };
     } else if (f.walk) {
       const [from, to] = this.model.loops[ANIMS[f.walk]];

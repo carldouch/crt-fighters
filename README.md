@@ -63,6 +63,14 @@ its time come from the engine's frame counters (`src/scene/fighter.mjs`, `src/sc
   Web Audio: nothing is loaded; `M` mutes it) and its gamepad rumbling. A hit plays the head or
   body reaction over the hitstun; a block holds a crouched guard over the blockstun. A knockout falls
   within the 90-frame pause, the winner celebrates, and the screen fades between rounds.
+- **A hit throws the body away from the side it lands on.** A left punch lands on the other fighter's
+  right side and turns it to its left; the right punch and the kicks (thrown with the right foot) turn
+  it to its right. The model has one reaction clip per height, which turns one way: for the other side,
+  `src/scene/mirror.mjs` reflects the motion of its torso, neck and head through the model's plane of
+  symmetry, leaving the hips, legs and arms as they are, so the stance and the feet do not change.
+- **Nobody sinks into the floor.** The knockout clip was made for a slimmer body: lying down, the TV
+  would go 16 cm under the floor. Each frame the fighter is lifted, if needed, until the TV's (hidden)
+  hitbox rests on the floor.
 
 Where the specification leaves a choice, this is what the entry does:
 

@@ -4,10 +4,12 @@
 //   fighter's body, as the engine decides;
 // - each move's impact: the time the striking hand or foot is furthest forward, and which limb it is;
 // - how much of each clip's forward hip travel to keep, so that every strike reaches as far as its range;
-// - the part of each walk clip where the feet move, to loop it.
+// - the part of each walk clip where the feet move, to loop it;
+// - which way each hit reaction throws the body, so that every strike gets the reaction of its side.
 import * as THREE from "three/webgpu";
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 import { ANIMS, MOVES } from "../engine/rules.mjs";
+import { mirrorClip } from "./mirror.mjs";
 
 /** Scene metres per engine unit (1 unit = 1 cm). */
 export const UNIT = 0.01;
@@ -15,6 +17,11 @@ const LIMBS = ["LeftHand", "RightHand", "LeftToeBase", "RightToeBase"];
 const SAMPLES = 120;
 // A knocked-out fighter keeps some of its fall's travel: it falls away from the other fighter.
 const KO_TRAVEL = 0.6;
+// Sides of the model, which faces +z: its left is +x.
+const LEFT = 1;
+const RIGHT = -1;
+// The chain from the hips to the TV: what a hit reaction throws to one side.
+const TV = ["Spine", "Spine1", "Spine2", "Neck", "Head"];
 
 export const bone = (root, name) => root.getObjectByName(`mixamorig${name}`);
 
@@ -31,7 +38,21 @@ export async function loadModel(url) {
   });
   const clips = Object.fromEntries(gltf.animations.map((c) => [c.name, c]));
   const m = measure(root, clips);
-  return { root, ...m, clips: withoutTravel(root, clips, m.restHips, m.travel) };
+  const shown = withoutTravel(root, clips, m.restHips, m.travel);
+  // A strike lands on the side of the limb it comes from, as the other fighter sees it: a left hand on its
+  // right side, which throws it to its left. Each move gets the reaction that throws that way: the clip
+  // itself, or its mirror image.
+  const reactions = {};
+  for (const [key, move] of Object.entries(MOVES)) {
+    const name = move.height === "high" ? ANIMS.hitHigh : ANIMS.hitMid;
+    const thrown = m.strikes[key].limb.startsWith("Left") ? LEFT : RIGHT;
+    if (thrown === m.throws[name]) reactions[key] = name;
+    else {
+      shown[`${name}.mirrored`] ??= mirrorClip(root, shown[name], TV.map((b) => bone(root, b)));
+      reactions[key] = `${name}.mirrored`;
+    }
+  }
+  return { root, ...m, clips: shown, reactions };
 }
 
 // Poses the model with `clip` at `time` (seconds) and returns world positions of its bones.
@@ -121,6 +142,20 @@ function measure(root, clips) {
     pace[name] = sweep / (loops[name][1] - loops[name][0]);
   }
 
+  // Which way each hit reaction throws the body, LEFT or RIGHT: where its head goes furthest sideways.
+  const throws = {};
+  for (const name of [ANIMS.hitHigh, ANIMS.hitMid]) {
+    p.pose(clips[name], 0);
+    const x0 = p.at("Head").x;
+    let furthest = 0;
+    for (let i = 0; i <= SAMPLES; i++) {
+      p.pose(clips[name], (clips[name].duration * i) / SAMPLES);
+      const dx = p.at("Head").x - x0;
+      if (Math.abs(dx) > Math.abs(furthest)) furthest = dx;
+    }
+    throws[name] = furthest > 0 ? LEFT : RIGHT;
+  }
+
   // There is no blocking clip: a block holds the backward step's lowest crouch, its guard up.
   let guard = { time: 0, y: Infinity };
   for (let i = 0; i <= SAMPLES; i++) {
@@ -134,7 +169,7 @@ function measure(root, clips) {
   for (const [o, pos, quat, scl] of rest) o.position.copy(pos), o.quaternion.copy(quat), o.scale.copy(scl);
   root.updateMatrixWorld(true);
   const paces = Object.fromEntries(Object.entries(pace).map(([name, v]) => [name, v * scale]));
-  return { scale, height: height * scale, halfDepth: halfDepth * scale, strikes, travel, loops, paces, guardTime: guard.time, restHips };
+  return { scale, height: height * scale, halfDepth: halfDepth * scale, strikes, travel, loops, paces, throws, guardTime: guard.time, restHips };
 }
 
 // Copies of the clips where the hips stay over the fighter's position: the engine moves the fighter, the
