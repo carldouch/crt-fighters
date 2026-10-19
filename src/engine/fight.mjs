@@ -63,6 +63,7 @@ export function step(state, inputs = {}) {
     s.over = s.roundWins.p1 >= ROUNDS_TO_WIN || s.roundWins.p2 >= ROUNDS_TO_WIN;
     s.winner = s.over ? s.roundWins.p1 === s.roundWins.p2 ? null : s.roundWins.p1 > s.roundWins.p2 ? 'p1' : 'p2' : null;
     s.pause = s.over ? 0 : ROUND_PAUSE_FRAMES;
+    s.lastRoundFrames = s.roundFrame;
     s.roundFrame = -1;
   }
   return s;

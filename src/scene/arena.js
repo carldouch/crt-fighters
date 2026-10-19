@@ -51,7 +51,11 @@ export async function makeArena(renderer) {
     fighters.push({ root, mixer, actions, current: null, shadow });
   }
   let endFrame = 0, endTime = 0;
-  return { scene, camera, resize(width, height) { camera.aspect = width / height; camera.updateProjectionMatrix(); },
+  return { scene, camera, resize(width, height) {
+    camera.aspect = width / height;
+    camera.fov = camera.aspect < 1 ? 60 : 38;
+    camera.updateProjectionMatrix();
+  },
     update(state, elapsed = 0) {
       if (state.roundFrame === -1 && endFrame === 0) { endFrame = state.frame; endTime = 0; }
       if (state.roundFrame !== -1) { endFrame = 0; endTime = 0; }

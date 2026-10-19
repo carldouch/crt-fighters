@@ -16,7 +16,7 @@ document.querySelector('#arena').append(renderer.domElement);
 function announce() {
   status.textContent = paused ? 'Paused' : fight.over ? fight.winner ? `PLAYER ${fight.winner === 'p1' ? 1 : 2} WINS` : 'MATCH DRAW' : fight.pause ? 'ROUND COMPLETE' : `ROUND ${fight.rounds.length + 1} / BEST OF 3`;
 }
-document.querySelector('#restart').onclick = () => { fight = createFight(); controls.clear(); paused = false; announce(); };
+document.querySelector('#restart').onclick = () => { fight = createFight(); controls.clear(); paused = false; document.querySelector('#pause').textContent = 'Pause'; announce(); };
 function togglePause() { paused = !paused; controls.clear(); document.querySelector('#pause').textContent = paused ? 'Resume' : 'Pause'; announce(); }
 document.querySelector('#pause').onclick = togglePause;
 window.addEventListener('keydown', (e) => { if (e.code === 'Escape') togglePause(); });
@@ -58,7 +58,8 @@ try {
       document.querySelector(`#${id}-health`).textContent = `${fight[id].hp} HP`;
       document.querySelector(`#${id}-wins`).textContent = `${fight.roundWins[id]} / 2`;
     }
-    document.querySelector('#clock').textContent = String(Math.ceil(Math.max(0, 3600 - Math.max(0, fight.roundFrame)) / 60)).padStart(2, '0');
+    const elapsedRound = fight.roundFrame < 0 ? fight.lastRoundFrames : fight.roundFrame;
+    document.querySelector('#clock').textContent = String(Math.ceil(Math.max(0, 3600 - elapsedRound) / 60)).padStart(2, '0');
     if (flash > 0) flash--;
     const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
     arena.camera.position.x = flash && !reduced ? Math.sin(flash * 2) * 0.025 : 0;
