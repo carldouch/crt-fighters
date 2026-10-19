@@ -6,6 +6,8 @@ Use Node 24 or later. `npm ci --ignore-scripts`, `npm run dev`; for the producti
 
 `node --test test/*.test.mjs` exercises immutable transitions, every move's exact startup and range, simultaneous lethal trades, pause boundaries, fixed-seed stress inputs, gamepad mapping, and real CLI failures. `node .launchpad/checks/round-1/run.mjs` runs the supplied checks with a locally installed Playwright browser; qualification uses the pinned container gate.
 
+After `npm run build`, `node test/browser-controls.mjs` runs a real Chromium regression: movement must keep working while New match, resumed Pause and Sound hold focus, while typing in an editable field must not move either fighter. It serves only `dist/` on an ephemeral loopback port. Use the pinned Playwright image when Chromium is not installed locally.
+
 ## Play
 
 Player 1: A/D walk; U/I punch; J/K kick. Player 2: left/right arrows; numpad 4/5 punch; numpad 1/2 kick. Holding back blocks high and mid attacks; low kicks break the guard. Forward + right kick gives the high kick. Held attacks repeat when recovery ends. Standard gamepads 0 and 1 map to players 1 and 2, including hot connection and disconnection. Opposing horizontal controls cancel. Attack priority is LP, RP, LK, RK when multiple buttons are held.
