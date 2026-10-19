@@ -34,9 +34,13 @@ try {
   }
   await page.evaluate(() => { const input = document.createElement('input'); input.id = 'typing'; document.body.append(input); input.focus(); });
   const before = await page.evaluate(() => window.__crt.fight.p1.x);
-  await page.keyboard.down('d'); await page.waitForTimeout(200); await page.keyboard.up('d');
+  const editStartFrame = await page.evaluate(() => window.__crt.fight.frame);
+  await page.keyboard.down('d');
+  await page.waitForFunction((frame) => window.__crt.fight.frame >= frame + 20, editStartFrame, { timeout: 20000 });
+  await page.keyboard.up('d');
   const after = await page.evaluate(() => window.__crt.fight.p1.x);
+  const editEndFrame = await page.evaluate(() => window.__crt.fight.frame);
   assert.equal(after, before, 'typing in an editable input must not move the fighter');
   assert.deepEqual(errors, []);
-  console.log(JSON.stringify({ results, editableInput: { before, after, passed: true }, errors }));
+  console.log(JSON.stringify({ results, editableInput: { before, after, startFrame: editStartFrame, endFrame: editEndFrame, passed: true }, errors }));
 } finally { await browser?.close(); await new Promise((resolve, reject) => server.close((error) => error ? reject(error) : resolve())); }
