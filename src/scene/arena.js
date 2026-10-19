@@ -50,18 +50,27 @@ export async function makeArena(renderer) {
     const shadow = mesh(new THREE.CircleGeometry(0.48, 24), '#111217', 0, 0.002, 0); shadow.rotation.x = -Math.PI / 2;
     fighters.push({ root, mixer, actions, current: null, shadow });
   }
-  let endFrame = 0;
+  let endFrame = 0, endTime = 0;
   return { scene, camera, resize(width, height) { camera.aspect = width / height; camera.updateProjectionMatrix(); },
-    update(state) {
-      if (state.roundFrame === -1 && endFrame === 0) endFrame = state.frame;
-      if (state.roundFrame !== -1) endFrame = 0;
+    update(state, elapsed = 0) {
+      if (state.roundFrame === -1 && endFrame === 0) { endFrame = state.frame; endTime = 0; }
+      if (state.roundFrame !== -1) { endFrame = 0; endTime = 0; }
+      else endTime += elapsed;
       fighters.forEach((view, i) => {
         const id = i === 0 ? 'p1' : 'p2', p = state[id];
         view.root.position.x = p.x / 100; view.shadow.position.x = p.x / 100;
         let name = ANIMS[p.motion] ?? ANIMS.idle, time = state.frame / 60;
         if (p.move) { const r = MOVES[p.move.key]; name = r.anim; time = p.move.frame / (r.startup + r.active + r.recovery) * view.actions[name].getClip().duration; }
-        else if (p.stun) name = p.hitHeight === 'high' ? ANIMS.hitHigh : ANIMS.hitMid;
-        if (state.roundFrame === -1) { name = p.hp === 0 ? ANIMS.ko : ANIMS.victory; time = (state.frame - endFrame) / 60; }
+        else if (p.stun) {
+          name = p.hitHeight === 'high' ? ANIMS.hitHigh : ANIMS.hitMid;
+          const lastHit = state.events.findLast((event) => event.attacker !== id);
+          time = lastHit ? (state.frame - lastHit.frame) / 60 : 0;
+        }
+        if (state.roundFrame === -1) {
+          const wonRound = state.rounds.at(-1)?.winner;
+          name = p.hp === 0 || wonRound && wonRound !== id ? ANIMS.ko : wonRound === id ? ANIMS.victory : ANIMS.idle;
+          time = endTime;
+        }
         if (view.current !== name) {
           view.mixer.stopAllAction(); view.current = name; view.actions[name].reset().play();
         }

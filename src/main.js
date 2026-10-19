@@ -41,7 +41,8 @@ try {
   announce(); window.__crt.ready = true;
   renderer.setAnimationLoop((now) => {
     const inputs = controls.sample();
-    accumulated += Math.min(Math.max((now - previous) / 1000, 0), 0.25); previous = now;
+    const elapsed = Math.min(Math.max((now - previous) / 1000, 0), 0.25);
+    accumulated += elapsed; previous = now;
     while (accumulated >= 1 / 60) {
       if (!paused && !document.hidden) {
         const before = fight; fight = step(fight, inputs);
@@ -51,7 +52,7 @@ try {
       accumulated -= 1 / 60;
     }
     window.__crt.fight = fight;
-    arena.update(fight);
+    arena.update(fight, paused || document.hidden ? 0 : elapsed);
     for (const id of ['p1', 'p2']) {
       document.querySelector(`#${id}-hp`).value = fight[id].hp;
       document.querySelector(`#${id}-health`).textContent = `${fight[id].hp} HP`;
