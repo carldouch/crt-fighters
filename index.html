@@ -11,7 +11,14 @@
     </style>
   </head>
   <body>
-    <div id="status"></div>
+    <main id="arena"></main>
+    <header class="hud">
+      <section class="player"><div><strong>01 / CYAN</strong><span id="p1-wins">0 / 2</span></div><progress id="p1-hp" aria-label="Player 1 health" max="100" value="100"></progress><span id="p1-health">100 HP</span></section>
+      <section class="middle"><b id="clock">60</b><span>CRT FIGHTERS</span></section>
+      <section class="player p2"><div><strong>02 / AMBER</strong><span id="p2-wins">0 / 2</span></div><progress id="p2-hp" aria-label="Player 2 health" max="100" value="100"></progress><span id="p2-health">100 HP</span></section>
+    </header>
+    <div id="status" role="status" aria-live="polite">Loading fighters…</div>
+    <footer><div class="controls"><span><b>P1</b> A / D · U I J K</span><span><b>P2</b> ← / → · NUM 4 5 1 2</span><span>Hold back to block · Forward + RK: high kick</span></div><nav aria-label="Match settings"><button id="pause">Pause</button><button id="restart">New match</button><label><input id="sound" type="checkbox"> Sound</label></nav></footer>
     <script type="module" src="/src/main.js"></script>
   </body>
 </html>
