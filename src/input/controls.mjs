@@ -16,7 +16,9 @@ export function attachControls(target = window) {
   const held = new Set();
   const codes = new Set(keys.flatMap((map) => Object.values(map)));
   target.addEventListener('keydown', (event) => {
-    if (event.target instanceof HTMLElement && /INPUT|SELECT|TEXTAREA|BUTTON/.test(event.target.tagName)) return;
+    const target = event.target;
+    if (target instanceof HTMLElement && (target.isContentEditable || /^(SELECT|TEXTAREA)$/.test(target.tagName) ||
+      target instanceof HTMLInputElement && !['checkbox', 'radio', 'button', 'submit', 'reset'].includes(target.type))) return;
     if (codes.has(event.code)) { event.preventDefault(); held.add(event.code); }
   });
   target.addEventListener('keyup', (event) => held.delete(event.code));
