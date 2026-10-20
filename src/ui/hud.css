@@ -1,0 +1,61 @@
+.hud {
+  position: fixed; top: 0; left: 0; right: 0; display: grid; grid-template-columns: 1fr auto 1fr; gap: 18px;
+  align-items: start; padding: 16px 22px; pointer-events: none; font-family: "Courier New", ui-monospace, monospace;
+  text-transform: uppercase; letter-spacing: 0.08em;
+}
+.side { display: grid; gap: 6px; }
+.side.p2 { justify-items: end; }
+.name { font-size: 13px; font-weight: 700; color: #f4f0ff; text-shadow: 0 0 8px rgba(140, 92, 255, 0.8); }
+.device { margin-left: 10px; font-size: 10px; color: #8f88b0; }
+.side.p2 .name { text-align: right; }
+.bar {
+  position: relative; width: 100%; height: 22px; background: #16121f; border: 2px solid #ece6ff;
+  box-shadow: 0 0 12px rgba(140, 92, 255, 0.55), inset 0 0 6px #000; overflow: hidden; transform: skewX(-12deg);
+}
+.side.p2 .bar { transform: skewX(12deg); }
+.bar .fill, .bar .trail { position: absolute; top: 0; bottom: 0; left: 0; width: 100%; }
+.side.p2 .bar .fill, .side.p2 .bar .trail { left: auto; right: 0; }
+.bar .trail { background: #ff5a4a; transition: width 0.45s ease-in 0.35s; }
+.bar .fill { background: linear-gradient(#ffe46b, #f2b134 60%, #c98612); transition: width 0.06s linear; }
+.side.p2 .bar .fill { background: linear-gradient(#8ff3ff, #35c8ff 60%, #1679b0); }
+.bar .fill.low { animation: blink 0.5s steps(2) infinite; }
+@keyframes blink { 50% { filter: brightness(1.8); } }
+.wins { display: flex; gap: 8px; }
+.wins i { width: 14px; height: 14px; border: 2px solid #ece6ff; border-radius: 50%; background: #16121f; }
+.wins i.won { background: #ff3d8b; box-shadow: 0 0 10px #ff3d8b; }
+.side.p2 .wins i.won { background: #35c8ff; box-shadow: 0 0 10px #35c8ff; }
+.clock {
+  min-width: 64px; padding: 2px 10px; text-align: center; font-size: 38px; font-weight: 700; color: #fff;
+  border: 2px solid #ece6ff; background: #16121f; box-shadow: 0 0 14px rgba(53, 200, 255, 0.5);
+}
+.clock.low { color: #ff5a4a; }
+.banner {
+  position: fixed; top: 38%; left: 0; right: 0; text-align: center; pointer-events: none; opacity: 0;
+  transform: scale(1.15); transition: opacity 0.12s, transform 0.12s; font-family: "Courier New", ui-monospace, monospace;
+  text-transform: uppercase;
+}
+.banner.shown { opacity: 1; transform: scale(1); }
+.banner .title {
+  font-size: clamp(36px, 8vw, 92px); font-weight: 900; font-style: italic; letter-spacing: 0.06em; color: #fff4d6;
+  text-shadow: 0 0 18px #ff3d8b, 0 0 42px #8c5cff, 4px 4px 0 #2a0f3a;
+}
+.banner .sub { margin-top: 6px; font-size: clamp(14px, 2vw, 20px); letter-spacing: 0.14em; color: #c9f4ff; text-shadow: 0 0 10px #35c8ff; }
+.curtain { position: fixed; inset: 0; background: #07060c; opacity: 0; pointer-events: none; }
+.crt {
+  position: fixed; inset: 0; pointer-events: none;
+  background:
+    repeating-linear-gradient(to bottom, rgba(0, 0, 0, 0.16) 0 1px, transparent 1px 3px),
+    radial-gradient(ellipse at center, transparent 58%, rgba(0, 0, 0, 0.55) 100%);
+}
+.toast {
+  position: fixed; bottom: 36px; left: 50%; transform: translateX(-50%); padding: 6px 14px; pointer-events: none;
+  font: 13px ui-monospace, monospace; color: #e8fbff; background: rgba(22, 18, 31, 0.85); border: 1px solid #35c8ff;
+  opacity: 0; transition: opacity 0.2s;
+}
+.toast.shown { opacity: 1; }
+.stats { position: fixed; top: 74px; left: 50%; transform: translateX(-50%); pointer-events: none; font: 11px ui-monospace, monospace; color: rgba(220, 214, 245, 0.45); }
+.help {
+  position: fixed; bottom: 10px; left: 0; right: 0; text-align: center; pointer-events: none; font: 12px ui-monospace, monospace;
+  color: rgba(220, 214, 245, 0.6);
+}
+.help b { color: rgba(255, 255, 255, 0.85); font-weight: 600; }
